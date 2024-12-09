@@ -4,7 +4,7 @@ const ctx = canvas.getContext('2d');
 
 let gridSize = 10;  //Default Easy
 let cellSize = canvas.width / gridSize;
-
+let grid; 
 
 function drawGrid() {
     //Clear
@@ -28,6 +28,9 @@ function drawGrid() {
         ctx.lineTo(canvas.width, i * cellSize);
         ctx.stroke(); 
     }
+    //Array as big as gridsize
+    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+    console.log(grid);
 }
 
 //Difficulty handler
