@@ -1,5 +1,4 @@
 Difficulty - # Of Bombs - Dimensions - Bombs per tile
-
 Easy       -      10    -     10x8   -      0.125 
 Medium     -      40    -     18x14  -      0.1587 
 Hard       -      99    -     25x20  -      0.198 
