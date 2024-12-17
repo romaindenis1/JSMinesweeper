@@ -4,23 +4,25 @@ var flagtext = document.getElementById("flagtext");
 
 let gridSize = 10;  // Default Easy
 let cellSize = canvas.width / gridSize;
-let grid = [];  
-let mineAmount = 10; //Default for easy
+let grid = [];
+let mineAmount = 10; // Default for easy
+let flaggedCount = 0; // Track flagged cells
 
-let firstClick = true; 
+let firstClick = true;
 let firstClickPosition = null;
-
+const flagImage = new Image();
+flagImage.src = "./Images/flag.png";
 
 /////////////////////////////////////////////////////TODO : Make firstclick logic work on hard and insane difficulties/////////////////////////////////////////////////////////////
 
-//Makes grid
+// Makes grid
 function initializeGrid() {
     grid = [];
     for (let row = 0; row < gridSize; row++) {
         grid[row] = [];
         for (let col = 0; col < gridSize; col++) {
             grid[row][col] = {
-                value: 0,      
+                value: 0,
                 revealed: false,
                 flagged: false
             };
@@ -37,7 +39,7 @@ function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Style
-    ctx.strokeStyle = '#ccc';  
+    ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
 
     // Draw the grid lines
@@ -91,12 +93,17 @@ function drawGrid() {
                 ctx.textBaseline = 'middle';
                 ctx.fillText(cell.value, x + cellSize / 2, y + cellSize / 2);
             }
+
+            // Draw flag
+            if (cell.flagged) {
+                ctx.drawImage(flagImage, x + cellSize / 4, y + cellSize / 4, cellSize / 2, cellSize / 2);
+            }
         });
     });
 
-    console.log(grid); // Log for QOL
+    // Update the flag count display
+    flagtext.innerHTML = `${mineAmount - flaggedCount}`;
 }
-
 
 // Difficulty handler
 document.getElementById('difficulty').addEventListener('change', (event) => {
@@ -115,12 +122,12 @@ document.getElementById('difficulty').addEventListener('change', (event) => {
             break;
         case 'hard':
             gridSize = 20;
-            mineAmount = 99;
+            mineAmount = 95;
             flagwords = document.createTextNode("99");
             break;
         case 'insane':
             gridSize = 30;
-            mineAmount = 175;
+            mineAmount = 150;
             flagwords = document.createTextNode("150");
             break;
     }
@@ -132,7 +139,7 @@ document.getElementById('difficulty').addEventListener('change', (event) => {
     drawGrid();
 });
 
-//Random mines
+// Random mines
 function placeMines() {
     const rows = grid.length;
     const cols = grid[0].length;
@@ -173,7 +180,7 @@ function calculateTiles() {
 
             let mineCount = 0;
 
-            // Check neighbour cells for mines
+            // Check neighbor cells for mines
             for (let i = -1; i <= 1; i++) {
                 for (let j = -1; j <= 1; j++) {
                     const newRow = rIdx + i;
@@ -195,11 +202,11 @@ function calculateTiles() {
 
 // Reveal cell function
 function revealCell(row, col) {
-    if (grid[row][col].revealed) return;
+    if (grid[row][col].revealed || grid[row][col].flagged) return;  // Don't reveal flagged cells
     grid[row][col].revealed = true;
 
     if (grid[row][col].value === 0) {
-        //Reveal neighbouring cells if empty (no number or mine)
+        // Reveal neighboring cells if empty (no number or mine)
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
                 const newRow = row + i;
@@ -215,15 +222,16 @@ function revealCell(row, col) {
 
 // Setup
 function initializeGame() {
-    firstClick = true;  
+    firstClick = true;
     firstClickPosition = null;
+    flaggedCount = 0; // Reset the flag count
     initializeGrid();
     drawGrid();
 }
 
 initializeGame();
 
-// Event listener for click
+// Event listener for left click (reveal cells)
 canvas.addEventListener('click', (event) => {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -235,11 +243,37 @@ canvas.addEventListener('click', (event) => {
     // Check if firstclick
     if (firstClick) {
         firstClickPosition = [row, col];
-        firstClick = false; 
+        firstClick = false;
         initializeGrid();   // Remake final grid
     }
 
     revealCell(row, col);
+});
+
+// Event listener for right click (flag/unflag cells)
+canvas.addEventListener('contextmenu', (event) => {
+    event.preventDefault(); // Prevent right-click menu from appearing
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const row = Math.floor(y / cellSize);
+    const col = Math.floor(x / cellSize);
+
+    const cell = grid[row][col];
+
+    // Toggle the flagged state of the cell
+    if (!cell.revealed) {
+        if (cell.flagged) {
+            cell.flagged = false;
+            flaggedCount--;
+        } else {
+            cell.flagged = true;
+            flaggedCount++;
+        }
+        drawGrid();  // Update the grid display
+    }
 });
 
 document.addEventListener('keydown', (event) => {
